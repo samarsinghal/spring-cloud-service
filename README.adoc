@@ -1,0 +1,161 @@
+
+= Upgrade Spring Cloud Services 2.0.x or 1.5.x Service Instances to 3.X (p-config-server to p.config-server)
+
+This repository is to cover a lab exercise for upgrading p-config-server to p.config-server. In this repository, I added a sample spring-cloud-config-client application. We first bind this application to Spring Cloud Services (2.0.x or 1.5.x) p-config-server instance and then upgrade it to the new p.config-server instance. Spring Cloud Config includes support for a number of backends, including Git, HashiCorp Vault, and CredHub. For this exercise, I will be using Git backend. 
+
+== Prerequisities 
+
+Both old Spring Cloud Services (2.0.x or 1.5.x) and new(3.x) product tile should be available in the cloud foundry MarketPlace.
+    
+    cf marketplace
+        p-config-server
+        p.config-server
+
+
+Reference document (Managing Service Instances 2.x)
+    
+    https://docs.pivotal.io/spring-cloud-services/2-1/common/config-server/managing-service-instances.html
+
+== Push/Bind spring-cloud-services-client application to old Spring Cloud Services Instances (p-config-server)
+
+. Create Service Instance
++
+[source,bash]
+---------------------------------------------------------------------
+cf create-service p-config-server standard my-config-server -c cfg-server-2.x.json
+
+cfg-server-2.x.json
+{
+  "git": {
+    "uri": "https://github.com/samarsinghal/app-config"
+  }, 
+  "encrypt": { 
+    "key": "KEY" 
+  }
+}
+---------------------------------------------------------------------
+
+. Build the application
++
+[source,bash]
+---------------------------------------------------------------------
+cd spring-cloud-config-client
+mvn clean package
+---------------------------------------------------------------------
+
+. Push application into Cloud Foundry
++
+[source,bash]
+---------------------------------------------------------------------
+cf push
+---------------------------------------------------------------------
+
+. Test your application by navigating to below endpoints of the application. You should now see a value that is read from the Cloud Config Server!
+
+.. /hello  
++
+HELLO PCF !! World!
++
+.. /encryptedConfig
++
+Encrypted Config Value
++
+
+*What just happened??*
++ 
+A Spring component within the Spring Cloud Starter Config Client module called a _service connector_ automatically detected that there was a Cloud Config service bound into the application.  The service connector configured the application automatically to connect to the Cloud Config Server and downloaded the configuration and wired it into the application
+
+. If you navigate to the Git repo we specified for our configuration, https://github.com/samarsinghal/app-config, you'll see a file named _spring-cloud-config-client.yml_.  This filename is the same as our _spring.application.name_ value for our Boot application.  The configuration is read from this file, in our case the following property:
++
+[source,bash]
+---------------------------------------------------------------------
+greeting: HELLO PCF !!
+encryptedGreeting: '{cipher}AQAGM3e5fGCo'
+---------------------------------------------------------------------
+
+Next we'll see how to upgrade Spring Cloud Services 2.0.x or 1.5.x Service Instances(p-config-server) to 3.X (p.config-server).
+
+---------------------------------------------------------------------
+Note: The encrypt.key parameter is no longer supported in 3.x. If you wish to manage secrets using the Config Server then Manage Secrets with CredHub.
+
+---------------------------------------------------------------------
+
+== Migrate Secrets to CredHub 
+
+A secret is stored in CredHub using a path including the name of the app that will use the secret, the profile to which the secret applies, the label, and the name of the secret:
+
+    [APP_NAME]/[PROFILE_NAME]/[LABEL_NAME]/[SECRET_NAME]
+
+. Adding/Removing a Secret 
+
+.. Using CLI
+
++
+[source,bash]
+
+    cf config-server-add-credhub-secret my-config-server spring-cloud-config-client/cloud/master/secret '{"secret": "secret123"}'
+    cf config-server-remove-credhub-secret my-config-server spring-cloud-config-client/cloud/master/secret
++
+.. Using HTTP PUT/DELETE call
+
++
+
+    curl https://config-server-a5782192-8036-4f57-8312-4756a2604240.apps.example.com/secrets/cook/production/mylabel/secretmenu \
+    -H "Authorization: $(cf oauth-token)" -X PUT --data '{"secretMenu": "tacos"}' \
+    -H "Content-Type: application/json" -i
+    HTTP/1.1 200 OK
+    Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+    Content-Length: 0
+    Date: Wed, 06 Nov 2019 23:43:23 GMT
+    Expires: 0
+
+== Upgrading Spring Cloud Services 2.0.x or 1.5.x Instances (No Secrets)
+
+Migrating Spring Cloud Services 2.0.x or 1.5.x Service Instances
+The Config Server (p-config-server) service offering of the Spring Cloud Services 2.0.x or 1.5.x tile cannot be upgraded to the Config Server (p.config-server) service offering of the Spring Cloud Services 3.1.x tile. After installing Spring Cloud Services 3.1.x alongside the older version of Spring Cloud Services, follow the below instructions to migrate an older Config Server service instance (SI).
+
+. Rename the existing SI (for example, adding a suffix -old to the original name):
++
+[source,bash]
+cf rename-service my-config-server my-config-server-old
+
+. Create a new Spring Cloud Services 3.1.x (p.config-server) SI, using the existing SI’s original name and passing the existing SI’s configuration using the -c flag:
++
+[source,bash]
+cf create-service p.config-server standard my-config-server -c cfg-server-3.x.json
+cfg-server-3.x.json # (Remove encrypt.key It's not supported in 3.x)
+{
+  "git": {
+    "uri": "https://github.com/samarsinghal/app-config"
+  }
+}
+
+. For each app bound to the existing SI, bind the app to the new SI:
++
+[source,bash]
+cf bind-service spring-cloud-config-client my-config-server
+
+. For each app bound to the existing SI, unbind the app from the existing SI:
++
+[source,bash]
+cf unbind-service spring-cloud-config-client my-config-server-old
+. For each app bound to the existing SI, restage the app:
++
+[source,bash]
+cf restage spring-cloud-config-client
+
+. For each app bound to the existing SI, ensure that the app is receiving configuration from the new SI.
+
+. Delete the existing SI:
+
++
+[source,bash]
+cf delete-service my-config-server-old
+
+
+Reference Document:
+    https://docs.pivotal.io/spring-cloud-services/3-1/common/config-server/managing-service-instances.html
+
+=== Note
+The approach used in the Pivotal migration process document is focussing on avoiding any changes to application. This approach of upgrading Spring Cloud Service will help maintain the same name for config-server instance. By renaming the existing instance to "name-old" and assigning the old instance name to a new instance, we are evading any change to the application.yml. 
+I would highly recommend to restage applications and ensure that the applications are receiving configuration from the new config service instance.
