@@ -70,7 +70,7 @@ A Spring component within the Spring Cloud Starter Config Client module called a
 [source,bash]
 ---------------------------------------------------------------------
 greeting: HELLO PCF !!
-encryptedGreeting: '{cipher}AQAGM3e5fGCo'
+secret: '{cipher}AQAGM3e5fGCo'
 ---------------------------------------------------------------------
 
 Next we'll see how to upgrade Spring Cloud Services 2.0.x or 1.5.x Service Instances(p-config-server) to 3.X (p.config-server).
@@ -93,7 +93,7 @@ A secret is stored in CredHub using a path including the name of the app that wi
 +
 [source,bash]
 
-    cf config-server-add-credhub-secret my-config-server spring-cloud-config-client/cloud/master/secret '{"secret": "secret123"}'
+    cf config-server-add-credhub-secret my-config-server spring-cloud-config-client/cloud/master/secret '{"secret": "Encrypted Config"}'
     cf config-server-remove-credhub-secret my-config-server spring-cloud-config-client/cloud/master/secret
 +
 .. Using HTTP PUT/DELETE call
