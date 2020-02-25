@@ -88,14 +88,16 @@ A secret is stored in CredHub using a path including the name of the app that wi
 
 . Adding/Removing a Secret 
 
-.. Using CLI
-
+.. Using CLI  
 +
 [source,bash]
 
     cf config-server-add-credhub-secret my-config-server spring-cloud-config-client/cloud/master/secret '{"secret": "Encrypted Config"}'
     cf config-server-remove-credhub-secret my-config-server spring-cloud-config-client/cloud/master/secret
 +
+
+ # Note: Install Spring Cloud Services plugin (https://docs.pivotal.io/spring-cloud-services/3-1/common/cf-cli-plugin.html) for cf CLI config-server-add-credhub-secret, and config-server-remove-credhub-secret commands to store or delete a secret within the runtime CredHub.
+
 .. Using HTTP PUT/DELETE call
 
 +
