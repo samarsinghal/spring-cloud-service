@@ -77,6 +77,9 @@ Next we'll see how to upgrade Spring Cloud Services 2.0.x or 1.5.x Service Insta
 
 ---------------------------------------------------------------------
 
+---------------------------------------------------------------------
+
+
 == Migrate Secrets to CredHub (Optional - If you wish to manage secrets with CredHub)
 
 A secret is stored in CredHub using a path including the name of the app that will use the secret, the profile to which the secret applies, the label, and the name of the secret:
