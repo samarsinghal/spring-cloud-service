@@ -76,11 +76,8 @@ secret: '{cipher}AQAGM3e5fGCo'
 Next we'll see how to upgrade Spring Cloud Services 2.0.x or 1.5.x Service Instances(p-config-server) to 3.X (p.config-server).
 
 ---------------------------------------------------------------------
-Note: The encrypt.key parameter is no longer supported in 3.x. If you wish to manage secrets using the Config Server then Manage Secrets with CredHub.
 
----------------------------------------------------------------------
-
-== Migrate Secrets to CredHub 
+== Migrate Secrets to CredHub (Optional - If you wish to manage secrets with CredHub)
 
 A secret is stored in CredHub using a path including the name of the app that will use the secret, the profile to which the secret applies, the label, and the name of the secret:
 
@@ -159,5 +156,5 @@ Reference Document:
     https://docs.pivotal.io/spring-cloud-services/3-1/common/config-server/managing-service-instances.html
 
 === Note
-The approach used in the Pivotal migration process document is focussing on avoiding any changes to application. This approach of upgrading Spring Cloud Service will help maintain the same name for config-server instance. By renaming the existing instance to "name-old" and assigning the old instance name to a new instance, we are evading any change to the application.yml. 
+The approach used in the Pivotal migration process document focuses on avoiding any changes to application. This approach of upgrading Spring Cloud Service will help maintain the same name for config-server instance. By renaming the existing instance to "name-old" and assigning the old instance name to a new instance, we are evading any change to the application.yml. 
 I would highly recommend to restage applications and ensure that the applications are receiving configuration from the new config service instance.
